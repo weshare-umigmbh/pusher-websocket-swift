@@ -1,0 +1,9 @@
+coverage_service: coveralls
+xcodeproj: PusherSwift/PusherSwift.xcodeproj
+scheme: PusherSwift-iOS
+workspace: PusherSwift.xcworkspace
+source_directory: Source/**
+ignore:
+  - Source/Starscream.swift
+  - Source/Reachability.swift
+  - Source/CryptoSwiftHMACModule.swift

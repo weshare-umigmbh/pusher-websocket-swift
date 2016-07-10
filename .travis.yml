@@ -34,6 +34,7 @@ before_install:
     fi
   - gem install cocoapods
   - gem install xcpretty
+  - gem install slather --no-document
 install:
   - pod update
   - pod install
@@ -59,4 +60,7 @@ script:
       xcodebuild -workspace PusherSwift.xcworkspace -scheme "$SCHEME" -destination "$DESTINATION" -sdk "$SDK" test -enableCodeCoverage YES | xcpretty -tc;
     fi
 after_success:
+  - if [ "$SCHEME" == "PusherSwiftTests-iOS" ]; then
+      slather
+    fi
   - sleep 5
