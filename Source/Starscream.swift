@@ -930,7 +930,7 @@ open class WebSocket : NSObject, StreamDelegate {
             if !isControlFrame && (receivedOpcode != .binaryFrame && receivedOpcode != .continueFrame &&
                 receivedOpcode != .textFrame && receivedOpcode != .pong) {
                     let errCode = CloseCode.protocolError.rawValue
-                    doDisconnect(errorWithDetail("unknown opcode: \(receivedOpcode)", code: errCode))
+                    doDisconnect(errorWithDetail("unknown opcode: \(String(describing: receivedOpcode))", code: errCode))
                     writeError(errCode)
                     return emptyBuffer
             }
@@ -976,17 +976,12 @@ open class WebSocket : NSObject, StreamDelegate {
                 len = UInt64(bufferLen-offset)
             }
             let data: Data
-            if len < 0 {
-                len = 0
-                data = Data()
-            } else {
-                if receivedOpcode == .connectionClose && len > 0 {
-                    let size = MemoryLayout<UInt16>.size
-                    offset += size
-                    len -= UInt64(size)
-                }
-                data = Data(bytes: baseAddress+offset, count: Int(len))
+            if receivedOpcode == .connectionClose && len > 0 {
+                let size = MemoryLayout<UInt16>.size
+                offset += size
+                len -= UInt64(size)
             }
+            data = Data(bytes: baseAddress+offset, count: Int(len))
             if receivedOpcode == .connectionClose {
                 var closeReason = "connection closed by server"
                 if let customCloseReason = String(data: data, encoding: .utf8) {
