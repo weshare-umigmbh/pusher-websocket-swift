@@ -28,6 +28,13 @@ class PusherPresenceChannelTests: XCTestCase {
         stubber = StubberForMocks()
     }
 
+    override func tearDown() {
+        pusher = nil
+        socket = nil
+        options = nil
+        stubber = nil
+    }
+
     func testMembersObjectStoresUserIdIfAUserDataFetcherIsProvided() {
         pusher.connection.userDataFetcher = { () -> PusherPresenceChannelMember in
             return PusherPresenceChannelMember(userId: "123")

@@ -392,7 +392,7 @@ public protocol WSStreamDelegate: class {
 
 //This protocol is to allow custom implemention of the underlining stream. This way custom socket libraries (e.g. linux) can be used
 public protocol WSStream {
-    weak var delegate: WSStreamDelegate? {get set}
+    var delegate: WSStreamDelegate? {get set}
     func connect(url: URL, port: Int, timeout: TimeInterval, ssl: SSLSettings, completion: @escaping ((Error?) -> Void))
     func write(data: Data) -> Int
     func read() -> Data?
@@ -679,9 +679,9 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
     #endif
 
     public var isConnected: Bool {
-        connectedMutex.lock()
+        mutex.lock()
         let isConnected = connected
-        connectedMutex.unlock()
+        mutex.unlock()
         return isConnected
     }
     public var request: URLRequest //this is only public to allow headers, timeout, etc to be modified on reconnect
@@ -694,7 +694,7 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
     private var stream: WSStream
     private var connected = false
     private var isConnecting = false
-    private let connectedMutex = NSLock()
+    private let mutex = NSLock()
     private var writeQueue = OperationQueue()
     private var readStack = [WSResponse]()
     private var inputQueue = [Data]()
@@ -703,11 +703,10 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
     private var didDisconnect = false
     private var readyToWrite = false
     private var headerSecKey = ""
-    private let readyToWriteMutex = NSLock()
     private var canDispatch: Bool {
-        readyToWriteMutex.lock()
+        mutex.lock()
         let canWork = readyToWrite
-        readyToWriteMutex.unlock()
+        mutex.unlock()
         return canWork
     }
 
@@ -945,9 +944,9 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
             s.writeQueue.addOperation(operation)
         })
 
-        self.readyToWriteMutex.lock()
+        self.mutex.lock()
         self.readyToWrite = true
-        self.readyToWriteMutex.unlock()
+        self.mutex.unlock()
     }
 
     /**
@@ -972,9 +971,9 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
             writeQueue.cancelAllOperations()
         }
         cleanupStream()
-        connectedMutex.lock()
+        mutex.lock()
         connected = false
-        connectedMutex.unlock()
+        mutex.unlock()
         if runDelegate {
             doDisconnect(error)
         }
@@ -1070,9 +1069,9 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
                 return code
             }
             isConnecting = false
-            connectedMutex.lock()
+            mutex.lock()
             connected = true
-            connectedMutex.unlock()
+            mutex.unlock()
             didDisconnect = false
             if canDispatch {
                 callbackQueue.async { [weak self] in
@@ -1462,9 +1461,9 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
         guard !didDisconnect else { return }
         didDisconnect = true
         isConnecting = false
-        connectedMutex.lock()
+        mutex.lock()
         connected = false
-        connectedMutex.unlock()
+        mutex.unlock()
         guard canDispatch else {return}
         callbackQueue.async { [weak self] in
             guard let s = self else { return }
@@ -1479,10 +1478,10 @@ open class WebSocket : NSObject, StreamDelegate, WebSocketClient, WSStreamDelega
     // MARK: - Deinit
 
     deinit {
-        readyToWriteMutex.lock()
+        mutex.lock()
         readyToWrite = false
-        readyToWriteMutex.unlock()
         cleanupStream()
+        mutex.unlock()
         writeQueue.cancelAllOperations()
     }
 
