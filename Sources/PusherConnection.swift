@@ -7,8 +7,8 @@ public typealias PusherEventJSON = [String: AnyObject]
 
 @objcMembers
 @objc open class PusherConnection: NSObject {
-    open let url: String
-    open let key: String
+    public let url: String
+    public let key: String
     open var options: PusherClientOptions
     open var globalChannel: GlobalChannel!
     open var socketId: String?
@@ -759,7 +759,7 @@ public typealias PusherEventJSON = [String: AnyObject]
                 let msgBuff: [UInt8] = Array(msg.utf8)
 
                 if let hmac = try? HMAC(key: secretBuff, variant: .sha256).authenticate(msgBuff) {
-                    let signature = Data(bytes: hmac).toHexString()
+                    let signature = Data(hmac).toHexString()
                     let auth = "\(self.key):\(signature)".lowercased()
 
                     if channel.type == .private {
